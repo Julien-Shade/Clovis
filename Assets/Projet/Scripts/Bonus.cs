@@ -7,18 +7,24 @@ public class Bonus : MonoBehaviour
     [SerializeField] private float respwawnTime;
     [SerializeField] private SpriteRenderer child;
     [SerializeField] private Animator animator;
+    [SerializeField] private bool canPick;
     private void Start()
     {
         child = GetComponentInChildren<SpriteRenderer>();
         animator = GetComponentInChildren<Animator>();
+        canPick = true;
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
-            collision.GetComponent<PlayerControl>().AddEndurence(); // ajoute Endurence (initialisé à 20 de BASE)
+            PlayerControl playerControl = collision.GetComponent<PlayerControl>();
 
-            StartCoroutine(Collect(respwawnTime)); // temps de reaparition du bonus
+            if (canPick && playerControl.Endurence != playerControl.MaxEndurence)
+            {
+                playerControl.AddEndurence(); // ajoute Endurence (initialisé à 20 de BASE)
+                StartCoroutine(Collect(respwawnTime)); // temps de reaparition du bonus
+            }
         }
     }
     /// <summary>
@@ -28,10 +34,13 @@ public class Bonus : MonoBehaviour
     /// <returns></returns>
     IEnumerator Collect(float t)
     {
+        canPick = false;
         animator.SetTrigger("Collect");
-
+        yield return new WaitForSeconds(2);
         child.enabled = false;
         yield return new WaitForSeconds(t);
+        animator.SetTrigger("Spawn");
         child.enabled = true;
+        canPick = true;
     }
 }

@@ -47,14 +47,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5578217780ae7140ae6d505867dbae9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  trail: {fileID: 0}
   slider: {fileID: 0}
   rb: {fileID: 0}
+  animator: {fileID: 0}
   moveInput: {x: 0, y: 0}
   speed: 0
   baseSpeed: 3
   runMultiplier: 5
   isRunning: 0
-  canRun: 0
   jumpForce: 5
   isgrounded: 0
   endurence: 1
@@ -158,7 +159,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7392443073479213558}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0

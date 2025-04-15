@@ -6,18 +6,22 @@ using UnityEngine.UI;
 public class PlayerControl : MonoBehaviour
 {
     [Header("References")]
+    [SerializeField] private TrailRenderer trail;
     [SerializeField] private Slider slider;
     [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private Animator animator;
     Controler inputActions;
 
     [Header("Movement")]
     [SerializeField] Vector2 moveInput;
-    [SerializeField] private float speed;
+    [SerializeField] private float currentSpeed;
     [SerializeField] private float baseSpeed;
 
     [Header("Run")]
     [SerializeField] private float runMultiplier;
     [SerializeField] private bool isRunning;
+    [SerializeField] private bool isWalking;
+    [SerializeField] private bool cantrail;
 
     [Header("Jump")]
     [SerializeField] private float jumpForce;
@@ -32,28 +36,30 @@ public class PlayerControl : MonoBehaviour
     public float Endurence
     {
         get => endurence; // read / lire
-        set { endurence = Mathf.Clamp(value, 0, maxEndurence); slider.value = endurence; slider.maxValue = maxEndurence; } // clamp la valeur entre 0 et maxEndurence (100 pour le moment) et est aussi synchroniser pour le slider (uniquement à l'écriture)
+        set { endurence = Mathf.Clamp(value, 0, MaxEndurence); slider.value = endurence; slider.maxValue = MaxEndurence; } // clamp la valeur entre 0 et maxEndurence (100 pour le moment) et est aussi synchroniser pour le slider (uniquement à l'écriture)
     }
-    public float Speed
+    public float CurrentSpeed
     {
         get
         {
-            if (isRunning && Endurence > 0)
+            if (isRunning && Endurence > 0) // si cours et peut consomer endurence
             {
-                speed = runMultiplier * baseSpeed;
+                currentSpeed = runMultiplier * baseSpeed;
                 //Debug.Log(speed + " is running");
-                return speed;
+                return currentSpeed;
             }
             else
             {
                 //Debug.Log(speed + " !running");
-                speed = baseSpeed;
-                return speed;
+                currentSpeed = baseSpeed;
+                return currentSpeed;
             }
         }
 
-        set => speed = value;
+        set => currentSpeed = value;
     }
+
+    public float MaxEndurence { get => maxEndurence; set => maxEndurence = value; }
     #endregion
     #region Input system
     private void OnEnable()
@@ -61,11 +67,17 @@ public class PlayerControl : MonoBehaviour
         inputActions.Player.Jump.performed += ctx => Jump();
 
         inputActions.Player.Run.performed += ctx => isRunning = true;
+        inputActions.Player.Run.performed += ctx => animator.SetBool("Run", isRunning);
         inputActions.Player.Run.canceled += ctx => isRunning = false;
+        inputActions.Player.Run.canceled += ctx => animator.SetBool("Run", isRunning);
 
         inputActions.Player.Move.performed += ctx => moveInput = ctx.ReadValue<Vector2>();
+        inputActions.Player.Move.performed += ctx => isWalking = true;
+        inputActions.Player.Move.performed += ctx => animator.SetBool("Walk", isWalking);
         inputActions.Player.Move.canceled += ctx => moveInput = Vector2.zero;
         inputActions.Player.Move.canceled += ctx => rb.velocity = Vector2.zero;
+        inputActions.Player.Move.canceled += ctx => isWalking = false;
+        inputActions.Player.Move.canceled += ctx => animator.SetBool("Walk", isWalking);
 
         inputActions.Enable();
     }
@@ -80,12 +92,15 @@ public class PlayerControl : MonoBehaviour
     }
     void Start()
     {
-
+        animator = GetComponentInChildren<Animator>();
+        trail = GetComponent<TrailRenderer>();
+        trail.emitting = false;
         slider = GameObject.Find("Slider_Endurence").GetComponent<Slider>(); // à modifier si nécessaire (se refaire au nom EXACTE du gameobject pour avoir le Slider)
         rb = GetComponent<Rigidbody2D>();
     }
     void Update()
     {
+        transform.position = new Vector3(Mathf.Clamp(transform.position.x, -15 ,15), transform.position.y, transform.position.z ); //limite déplacement player
         Run();
     }
     private void FixedUpdate()
@@ -95,15 +110,23 @@ public class PlayerControl : MonoBehaviour
     }
     private void Move()
     {
-        rb.AddForce(moveInput * Speed);
+        rb.AddForce(moveInput * CurrentSpeed);
     }
     private void Run()
     {
-        if (!isRunning) return;
-
-        if (Endurence > 0)
+        if (!isRunning || Endurence == 0)
         {
-            Endurence -= consomationEndurence * Time.deltaTime; // 20endurence/s
+            trail.emitting = false;
+            return;
+        }
+
+        if (Endurence > 0 && moveInput != Vector2.zero) // si peut consomer endurence et qu'il bouge en gros
+        {
+            Endurence -= consomationEndurence * Time.deltaTime; // X endurence/s
+            if (cantrail)
+            {
+                trail.emitting = true;
+            }
         }
     }
     /// <summary>
@@ -119,12 +142,14 @@ public class PlayerControl : MonoBehaviour
         if (!isgrounded) return;
 
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        animator.SetTrigger("Jump");
     }
-    private void OnCollisionStay2D(Collision2D collision)
+    private void OnCollisionEnter2D(Collision2D collision)
     {
         if (collision.gameObject.CompareTag("Ground"))
         {
             isgrounded = true;
+            animator.SetTrigger("End");
         }
     }
     private void OnCollisionExit2D(Collision2D collision)
