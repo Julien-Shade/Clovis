@@ -6,16 +6,19 @@ public class Bonus : MonoBehaviour
 {
     [SerializeField] private float respwawnTime;
     [SerializeField] private SpriteRenderer child;
+    [SerializeField] private Animator animator;
     private void Start()
     {
-        child = GetComponent<SpriteRenderer>();
+        child = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponentInChildren<Animator>();
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Player"))
         {
             collision.GetComponent<PlayerControl>().AddEndurence(); // ajoute Endurence (initialisé à 20 de BASE)
-            StartCoroutine(Collect(respwawnTime)); // temps de racparition du bonus
+
+            StartCoroutine(Collect(respwawnTime)); // temps de reaparition du bonus
         }
     }
     /// <summary>
@@ -25,6 +28,8 @@ public class Bonus : MonoBehaviour
     /// <returns></returns>
     IEnumerator Collect(float t)
     {
+        animator.SetTrigger("Collect");
+
         child.enabled = false;
         yield return new WaitForSeconds(t);
         child.enabled = true;
