@@ -8,8 +8,10 @@ public class Bonus : MonoBehaviour
     [SerializeField] private SpriteRenderer child;
     [SerializeField] private Animator animator;
     [SerializeField] private bool canPick;
+    [SerializeField] private float amount;
     private void Start()
     {
+        amount = 20;
         child = GetComponentInChildren<SpriteRenderer>();
         animator = GetComponentInChildren<Animator>();
         canPick = true;
@@ -22,7 +24,7 @@ public class Bonus : MonoBehaviour
 
             if (canPick && playerControl.Endurence != playerControl.MaxEndurence)
             {
-                playerControl.AddEndurence(); // ajoute Endurence (initialisé à 20 de BASE)
+                playerControl.AddEndurence(amount); // ajoute Endurence (initialisé à 20 de BASE)
                 StartCoroutine(Collect(respwawnTime)); // temps de reaparition du bonus
             }
         }

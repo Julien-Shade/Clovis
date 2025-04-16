@@ -149,7 +149,8 @@ public class PlayerControl : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isgrounded = true;
-            animator.SetTrigger("End");
+            animator.SetBool("End", isgrounded);
+            animator.SetBool("Ground", isgrounded);
         }
     }
     private void OnCollisionExit2D(Collision2D collision)
@@ -157,6 +158,8 @@ public class PlayerControl : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isgrounded = false;
+            animator.SetBool("End", isgrounded);
+            animator.SetBool("Ground", isgrounded);
         }
     }
 }
